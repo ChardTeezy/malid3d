@@ -1,0 +1,68 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mingw-w64 cmake ninja-build zip
+
+      - name: Fetch Vulkan headers
+        run: |
+          git clone --depth 1 --branch v1.3.296 \
+            https://github.com/KhronosGroup/Vulkan-Headers.git third_party/Vulkan-Headers
+
+      - name: Build x64
+        run: |
+          cmake -S . -B build/x64 -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-x64.cmake \
+            -DMALID3D_BUILD="${GITHUB_SHA::7}"
+          cmake --build build/x64
+
+      - name: Build x86
+        run: |
+          cmake -S . -B build/x86 -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-x86.cmake \
+            -DMALID3D_BUILD="${GITHUB_SHA::7}"
+          cmake --build build/x86
+
+      - name: Check exports
+        run: |
+          for a in x64 x86; do
+            echo "== $a =="
+            x86_64-w64-mingw32-objdump -p build/$a/d3d11.dll | sed -n '/Ordinal\/Name Pointer/,/^$/p'
+            x86_64-w64-mingw32-objdump -p build/$a/d3d11.dll | grep 'DLL Name' || true
+          done
+
+      - name: Package
+        run: |
+          mkdir -p dist/malid3d/x64 dist/malid3d/x32
+          cp build/x64/d3d11.dll dist/malid3d/x64/
+          cp build/x86/d3d11.dll dist/malid3d/x32/
+          cp README.md dist/malid3d/
+          (cd dist && zip -r "malid3d-${GITHUB_SHA::7}.zip" malid3d)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: malid3d
+          path: dist/*.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          files: dist/*.zip
+          prerelease: true
