@@ -29,6 +29,6 @@ and download the newest `malid3d-xxxxxxx.zip`.
 Set the environment variable `MALID3D_LOG_PATH` to a folder to choose where the
 log goes.
 
-## Roadmap
+## Design and roadmap
 
-See [docs/ROADMAP.md](docs/ROADMAP.md).
+See [docs/DESIGN.md](docs/DESIGN.md) and [docs/ROADMAP.md](docs/ROADMAP.md).

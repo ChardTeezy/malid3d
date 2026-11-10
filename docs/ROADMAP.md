@@ -16,4 +16,5 @@ Each milestone ends with something testable on the phone.
 6. **Later.** Compute shaders, geometry-shader and tessellation fallbacks,
    more feature coverage game by game.
 
-Design decisions are driven by the milestone 0 log from the target device.
+Design decisions are recorded in [DESIGN.md](DESIGN.md) and are driven by the
+milestone 0 log from the target device.
