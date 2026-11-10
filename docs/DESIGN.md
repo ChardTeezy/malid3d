@@ -27,8 +27,10 @@ tied to Mesa's internal code, for a small gain.
 
 ## What we know about the hardware
 
-From a native test report on the stock Arm driver (r44p1, Vulkan 1.3.247) on
-the target phone. PanVK may differ; the milestone 0 probe log decides.
+**Unverified.** These come from a text report whose origin is unconfirmed,
+describing the stock Arm driver (r44p1, Vulkan 1.3.247). Treat every line
+below as a hypothesis until the milestone 0 probe log from the target phone
+confirms or replaces it.
 
 Works in hardware: geometry shaders, tessellation, compute, 4x MSAA,
 transform feedback (single stream), instancing, indirect draws, dynamic
@@ -36,7 +38,7 @@ rendering, synchronization2, descriptor indexing, `VK_EXT_shader_tile_image`,
 `VK_EXT_rasterization_order_attachment_access`, custom border colours.
 Subgroup size is 16. One 11 GiB memory heap shared with the system.
 
-Missing on the stock driver, so each needs a plan:
+Reported missing on the stock driver; each needs a plan if the probe agrees:
 
 | Missing | Plan |
 |---|---|
