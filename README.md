@@ -1,7 +1,8 @@
 # malid3d
 
 A Direct3D 11 translation layer for Arm Mali GPUs, written from scratch on top
-of Vulkan (PanVK). First target: Mali-G615 MC2 through GameHub / BannerHub.
+of Vulkan. It targets Arm's stock Mali driver first and PanVK second. First
+device: Mali-G615 MC2 through GameHub / BannerHub.
 
 **Status: milestone 0 (probe).** This build does not render anything yet. It
 replaces `d3d11.dll`, records what the Vulkan driver on your device can do, and
@@ -25,6 +26,8 @@ and download the newest `malid3d-xxxxxxx.zip`.
 3. Find `malid3d.log` in the game's folder (next to the `.exe`). If it is not
    there, check the Windows temp folder inside the container.
 4. Send the whole log back.
+5. If you can, repeat with the other GPU driver selected (system driver and
+   PanVK) and send both logs. Rename the first log before the second run.
 
 Set the environment variable `MALID3D_LOG_PATH` to a folder to choose where the
 log goes.

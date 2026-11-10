@@ -1,29 +1,35 @@
 # Design
 
+## Vision
+
+Build a Direct3D translation layer for Mali from the ground up instead of
+adapting DXVK. DXVK assumes desktop Vulkan features that Mali drivers often
+lack (logic ops, dual-source blending, and others) and structures rendering
+for desktop GPUs. malid3d starts from the features Mali drivers do expose and
+makes the Mali-friendly path the main path, not a fallback.
+
 ## Decision: Vulkan is the boundary
 
-    Game -> Direct3D 11 -> malid3d -> Vulkan -> PanVK -> kernel (kbase) -> Mali GPU
+    Game -> Direct3D 11 -> malid3d -> Vulkan -> Mali driver -> kernel -> GPU
 
 malid3d translates Direct3D 11 to Vulkan and does not talk to the GPU itself.
-Mali-specific work happens on both sides of that boundary:
+Skipping Vulkan (a D3D11 driver built straight on driver internals, as Mesa's
+Gallium Nine did for D3D9) was considered and rejected: far more work for a
+small gain.
 
-- **Above it (this repo):** how D3D11 is mapped to Vulkan so a tile-based GPU
-  does as little wasted work as possible.
-- **Below it (the driver):** the target driver is an open-source Mesa PanVK
-  build, so a missing feature or a bug can be fixed in the driver instead of
-  being worked around here.
+## Target drivers
 
-Skipping Vulkan (a D3D11 driver built straight on the driver internals, as
-Mesa's Gallium Nine did for D3D9) was considered and rejected: far more work,
-tied to Mesa's internal code, for a small gain.
+1. **Primary: Arm's stock Mali driver.** It ships on every Mali phone and is
+   the most mature. Its bugs cannot be fixed, only worked around, so errata
+   handling is part of the design. Only features this driver exposes may be
+   *required*.
+2. **Secondary: PanVK** (Mesa, including the kbase port used by GameHub).
+   Less stable and not available for every Mali GPU, but open source and
+   richer in extensions (for example built-in BC texture emulation). Extra
+   features it exposes are used as optional fast paths, never required.
 
-## Target
-
-- GPU: Mali-G615 MC2 (Valhall v11), MediaTek MT6878, Android 16.
-- Runtime: GameHub / BannerHub, Proton arm64x, FEX.
-- Vulkan driver: `mali-panvk-27.0.0-devel` package r10/v11, PanVK from Mesa
-  27.0.0-devel on the stock Arm kbase kernel driver (`/dev/mali0`), reporting
-  Vulkan 1.3.
+First device: Mali-G615 MC2 (Valhall v11), MediaTek MT6878, Android 16,
+running games through GameHub / BannerHub (Proton arm64x, FEX).
 
 ## What we know about the hardware
 
@@ -42,7 +48,7 @@ Reported missing on the stock driver; each needs a plan if the probe agrees:
 
 | Missing | Plan |
 |---|---|
-| BC texture formats | Use the driver's BC emulation if PanVK exposes it; otherwise decode on upload |
+| BC texture formats | Decode or transcode on upload; use the driver's own BC support when it has it |
 | Dual-source blending, logic ops | Read the framebuffer through tile-image access and blend in the shader |
 | Wireframe fill mode | Emit lines from a rewritten index buffer or geometry stage |
 | Multiple viewports | Only viewport 0 at first |
